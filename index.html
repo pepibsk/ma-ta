@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mă-ta</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👩</text></svg>">
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 400;
+            font-size: 1.3em;
+            color: #000000;
+            height: 97vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .daytime {
+            background-image: linear-gradient(to right top, #99bbcb, #a5c7d7, #b1d4e2, #bde0ee, #c9edfa);
+            color: #000000;
+        }
+
+        .nighttime {
+            background-color: rgb(56, 2, 67);
+            color: #ffffff;
+        }
+
+        h1 {
+            margin: 0 auto;
+            font-size: 2.2em;
+            text-align: center;
+            font-size: 5em;
+            text-shadow: .04em .04em 0 rgba(0,0,0,0.3);
+        }
+
+        p {
+            margin: 0 auto;
+            text-align: center;
+            text-shadow: .02em .02em 0 rgba(0,0,0,0.3);
+        }
+
+        .centered-message {
+            text-align: center;
+            margin-top: 10px; /* Adjust as needed */
+            text-shadow: .02em .02em 0 rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body class="daytime">
+<div id="weather-data"></div>
+<p>Craiova</p> <br>
+<div id="wind-info" class="centered-message"></div>
+<div id="outfit-suggestion" class="centered-message"></div>
+<div id="sunset-time" class="centered-message"></div>
+
+<script>
+    const city = "Craiova,ro"; // Set the city here
+    const apiKey = 'f1eee0d5b188ece32c73957c07fda09d'; // Replace with your API key
+
+    function getWeather() {
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric&lang=ro`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                const weatherData = {
+                    temperature: data.main.temp,
+                    description: data.weather[0].description,
+                    rain: data.weather[0].main === 'Rain',
+                    sunny: data.weather[0].main === 'Clear' && data.weather[0].description === 'cer senin', // Check if it's sunny
+                    windSpeed: data.wind.speed, // Get wind speed
+                    sunsetTime: new Date(data.sys.sunset * 1000) // Convert UNIX timestamp to JavaScript Date object
+                };
+                displayWeather(weatherData);
+            })
+            .catch(error => {
+                console.error('Error fetching weather data:', error);
+            });
+    }
+
+    function displayWeather(weatherData) {
+        const body = document.body;
+        const weatherDisplay = document.getElementById('weather-data');
+        const windInfo = document.getElementById('wind-info');
+        const outfitSuggestion = document.getElementById('outfit-suggestion');
+        const sunsetTimeDisplay = document.getElementById('sunset-time');
+
+        weatherDisplay.innerHTML = `
+                <h1>${Math.round(weatherData.temperature)}°</h1>
+                <p>${weatherData.description}</p>
+                <p>vânt ${weatherData.windSpeed} m/s</p>
+            `;
+
+        // Wind information
+        let windMessage = '';
+        if (weatherData.windSpeed <= 2.0) {
+            windMessage = 'Nu bate vântul 🍃';
+        } else if (weatherData.windSpeed <= 3.6) {
+            windMessage = 'Briză ușoară 🌬️';
+        } else if (weatherData.windSpeed <= 5.8) {
+            windMessage = 'Bate puțin vântul 💨';
+        } else if (weatherData.windSpeed <= 10) {
+            windMessage = 'Bate rău vântul ִֶָ𓂃˖༄ ִֶָ🐇་༘࿐';
+        } else {
+            windMessage = 'Bate vântul de rupe 🌪️';
+        }
+        windInfo.textContent = windMessage;
+
+        // Outfit suggestion
+        if (weatherData.temperature < 11) {
+            outfitSuggestion.textContent = 'Tricou subțire, geacă groasă, fular, urechi.';
+        } else if (weatherData.temperature >= 11 && weatherData.temperature < 15) {
+            if (weatherData.windSpeed >= 6) {outfitSuggestion.textContent = 'Fular, urechi tricou subțire, hanorac gros, geacă subțire.';} else {outfitSuggestion.textContent = 'Tricou subțire, hanorac gros, geacă subțire, fular.';}
+        } else if (weatherData.temperature >= 15 && weatherData.temperature < 16) {
+            outfitSuggestion.textContent = 'Tricou subțire, hanorac gros, geacă subțire.';
+        } else if (weatherData.temperature >= 16 && weatherData.temperature < 18) {
+            outfitSuggestion.textContent = 'Tricou subțire, hanorac subțire, geacă subțire.';
+        } else if (weatherData.temperature >= 18 && weatherData.temperature < 21) {
+            outfitSuggestion.textContent = 'Tricou subțire, geacă subțire.';
+        } else if (weatherData.temperature >= 21 && weatherData.temperature < 26) {
+            outfitSuggestion.textContent = 'Tricou subțire 🥼';
+        } else if (weatherData.temperature >= 26 && weatherData.temperature < 37) {
+            outfitSuggestion.textContent = 'Tricou cu mânecă scurtă 👕';
+        } else {
+            outfitSuggestion.textContent = 'E teroare de cald 🌡️☀️';
+        }
+
+        if (weatherData.rain) {
+            outfitSuggestion.textContent += ' Nu uita umbrela!☔⛈️';
+        }
+
+        // Display sunset time
+        let sunsetMessage = '';
+
+        // Verifică dacă este însorit
+        if (weatherData.sunny) {
+            // Verifică dacă este înainte de apus
+            if (isBeforeSunset(weatherData.sunsetTime)) {
+                let sunsetHour = weatherData.sunsetTime.getHours();
+                let sunsetMinute = weatherData.sunsetTime.getMinutes() + 1; // Adaugă 1 minut
+
+                if (sunsetMinute >= 60) {
+                    sunsetHour += 1;
+                    sunsetMinute -= 60;
+                }
+
+                sunsetMessage = `Nu uita ochelarii de soare!😎<br>Apus🌇: ${sunsetHour}:${sunsetMinute < 10 ? '0' : ''}${sunsetMinute}`;
+            } else {
+                sunsetMessage = 'Soarele a apus.🌛';
+            }
+        } else {
+            sunsetMessage = 'Nu este însorit acum.';
+        }
+
+        sunsetTimeDisplay.innerHTML = sunsetMessage;
+
+        // Adjust background color and text color based on whether it's daytime or nighttime
+        if (isBeforeSunset(weatherData.sunsetTime)) {
+            body.classList.add('daytime');
+            body.classList.remove('nighttime');
+        } else {
+            body.classList.add('nighttime');
+            body.classList.remove('daytime');
+        }
+    }
+
+    // Function to check if current time is before sunset time
+    function isBeforeSunset(sunsetTime) {
+        const currentTime = new Date();
+        return currentTime < sunsetTime;
+    }
+
+    // Call getWeather() when the page loads
+    window.onload = getWeather;
+</script>
+</body>
+</html>
